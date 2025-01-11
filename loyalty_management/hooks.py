@@ -28,7 +28,13 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    
+    "Loyalty Program": "public/js/loyalty_program.js",
+    "Customer": "public/js/customer_dashboard.js",
+
+    
+    }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -114,9 +120,11 @@ app_license = "mit"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	
+    "Sales Invoice": "loyalty_management.loyalty_management.overrides.sales_invoice.CustomSalesInvoice",
+    # "Loyalty Program": "loyalty_management.loyalty_management.overrides.loyalty_program.CustomLoyaltyProgram",
+}
 
 # Document Events
 # ---------------
@@ -159,9 +167,11 @@ app_license = "mit"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "loyalty_management.event.get_events"
-# }
+override_whitelisted_methods = {
+	# "frappe.desk.doctype.event.event.get_events": "loyalty_management.event.get_events"
+    "erpnext.accounts.doctype.loyalty_program.loyalty_program.get_loyalty_program_details_with_points": "loyalty_management.loyalty_management.overrides.loyalty_program.get_loyalty_program_details_with_points",
+
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

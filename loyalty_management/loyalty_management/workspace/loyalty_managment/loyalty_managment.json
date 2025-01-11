@@ -1,0 +1,83 @@
+{
+ "charts": [
+  {
+   "chart_name": "Customers Loyalty Programs",
+   "label": "Customers Loyalty Programs"
+  }
+ ],
+ "content": "[{\"id\":\"rQmh2IHfJs\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Loyalty Management</span><span class=\\\"h4\\\"><b></b></span>\",\"col\":12}},{\"id\":\"9kOmWZmD1h\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Customers Loyalty Programs\",\"col\":12}},{\"id\":\"Oo1v9-mDfW\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"OX0nLHU1Z3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Loyalty Programs\",\"col\":4}},{\"id\":\"5EBPXoomYf\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Points Issued\",\"col\":4}},{\"id\":\"rks3yUbVtx\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Points Redeemed\",\"col\":4}},{\"id\":\"nv3NaMhvn4\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"l6e3bXEjDU\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customers\",\"col\":3}},{\"id\":\"2Iu2cpmy76\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Loyalty Programs\",\"col\":3}},{\"id\":\"07-HfSKomd\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Loyalty Point Entries\",\"col\":3}},{\"id\":\"zUTQZAQR7O\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Xrz2iC7fTf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports</b></span>\",\"col\":12}},{\"id\":\"GK1zCoBBIx\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer Loyalty Summery\",\"col\":3}}]",
+ "creation": "2025-01-11 01:18:14.222131",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "share",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Loyalty Managment",
+ "links": [],
+ "modified": "2025-01-11 11:25:33.506740",
+ "modified_by": "Administrator",
+ "module": "Loyalty Management",
+ "name": "Loyalty Managment",
+ "number_cards": [
+  {
+   "label": "Loyalty Programs",
+   "number_card_name": "Loyalty Programs"
+  },
+  {
+   "label": "Total Points Redeemed",
+   "number_card_name": "Total Points Redeemed"
+  },
+  {
+   "label": "Total Points Issued",
+   "number_card_name": "Total Points Issued"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Loyalty Manager"
+  }
+ ],
+ "sequence_id": 42.0,
+ "shortcuts": [
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "label": "Loyalty Point Entries",
+   "link_to": "Loyalty Point Entry",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Customer Loyalty Summery",
+   "link_to": "Customer Loyalty Summery",
+   "type": "Report"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Loyalty Programs",
+   "link_to": "Loyalty Program",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Customers",
+   "link_to": "Customer",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Loyalty Managment"
+}

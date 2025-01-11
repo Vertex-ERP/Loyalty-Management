@@ -1,0 +1,31 @@
+{
+ "cards": [
+  {
+   "card": "Loyalty Programs"
+  },
+  {
+   "card": "Total Points Issued"
+  },
+  {
+   "card": "Total Points Redeemed"
+  }
+ ],
+ "charts": [
+  {
+   "chart": "Loyalty Programs",
+   "width": "Full"
+  }
+ ],
+ "creation": "2025-01-11 10:54:45.356573",
+ "dashboard_name": "Loyalty Management",
+ "docstatus": 0,
+ "doctype": "Dashboard",
+ "idx": 0,
+ "is_default": 0,
+ "is_standard": 1,
+ "modified": "2025-01-11 11:12:29.481139",
+ "modified_by": "Administrator",
+ "module": "Loyalty Management",
+ "name": "Loyalty Management",
+ "owner": "Administrator"
+}
