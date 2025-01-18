@@ -1,0 +1,134 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:PNT-SINV-{YYYY}-{#####}",
+ "creation": "2025-01-11 21:53:01.827925",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_c8v7",
+  "amended_from",
+  "customer",
+  "cost_center",
+  "points_purchased",
+  "column_break_bvwt",
+  "purchase_date",
+  "company",
+  "cost_per_point",
+  "section_break_rwyt",
+  "total",
+  "sales_invoice",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_c8v7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Point Purchase Invoice",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "purchase_date",
+   "fieldtype": "Date",
+   "label": "Purchase Date"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "points_purchased",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Points Purchased",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "cost_per_point",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Cost Per Point",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "column_break_bvwt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_rwyt",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-01-11 22:01:24.533021",
+ "modified_by": "Administrator",
+ "module": "Loyalty Management",
+ "name": "Point Purchase Invoice",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

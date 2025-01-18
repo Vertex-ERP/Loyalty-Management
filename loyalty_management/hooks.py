@@ -31,7 +31,7 @@ app_license = "mit"
 doctype_js = {
     
     "Loyalty Program": "public/js/loyalty_program.js",
-    "Customer": "public/js/customer_dashboard.js",
+    # "Customer": "public/js/customer_dashboard.js",
 
     
     }
@@ -74,6 +74,8 @@ doctype_js = {
 # ------------
 
 # before_install = "loyalty_management.install.before_install"
+after_install = "loyalty_management.loyalty_management.overrides.cache_manager.extend_doctype_mapping"
+
 # after_install = "loyalty_management.install.after_install"
 
 # Uninstallation
@@ -123,20 +125,26 @@ doctype_js = {
 override_doctype_class = {
 	
     "Sales Invoice": "loyalty_management.loyalty_management.overrides.sales_invoice.CustomSalesInvoice",
-    # "Loyalty Program": "loyalty_management.loyalty_management.overrides.loyalty_program.CustomLoyaltyProgram",
+    "Loyalty Program": "loyalty_management.loyalty_management.overrides.loyalty_program.CustomLoyaltyProgram",
+    "Loyalty Point Entry": "loyalty_management.loyalty_management.overrides.loyalty_point_entry.CustomLoyaltyPointEntry",
 }
 
 # Document Events
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"*": {
+		# "on_update": "method",
+		# "on_cancel": "method",
+		# "on_trash": "method",
+        "on_change": [
+			"loyalty_management.loyalty_management.overrides.loyalty_program.process_loyalty_points",
+			
+		],
+	}
+    
+}
 
 # Scheduled Tasks
 # ---------------
