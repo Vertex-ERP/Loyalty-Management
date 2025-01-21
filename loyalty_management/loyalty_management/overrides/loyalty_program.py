@@ -6,7 +6,10 @@ from frappe.core.doctype.user.user import get_enabled_users
 
 from frappe.utils import add_days
 from frappe.model import log_types
-from datetime import datetime
+import datetime
+from frappe.utils import now
+from math import floor
+
 
 
 
@@ -48,11 +51,28 @@ class CustomLoyaltyProgram(LoyaltyProgram):
     
 
     def apply(self, doc):
+        # frappe.msgprint(f"apply {self.name}")
         #field is user_field in loyal program
         #if doc.[field] is equal name of program
+
+        current_time = now().split(" ")[1][:5]  # Extract "HH:MM"
+        # current_time.split
+        exists = frappe.db.exists(
+        "Loyalty Point Entry",
+        {
+        "invoice": doc.name,
+        "loyalty_points":   [">=", -1],
+
+
+        
+        },
+        )
+        # frappe.msgprint(f"exist{exists}{current_time}")
+        if exists:
+             return
         
         customer_program=frappe.db.get_value("Customer", doc.get(self.custom_user_field), "loyalty_program")
-        if customer_program==self.name:
+        if customer_program==self.name and self.custom_reference_doctype == doc.get("doctype"):
             # frappe.msgprint(f"true {self.name}")
 
 
@@ -62,7 +82,7 @@ class CustomLoyaltyProgram(LoyaltyProgram):
                 # frappe.msgprint(f"{lp_details.collection_factor}")
                 if doc.get(self.custom_based_on):
                     # frappe.msgprint("iii")
-                    points=round(doc.get(self.custom_based_on) /lp_details.collection_factor)
+                    points=floor(doc.get(self.custom_based_on) /lp_details.collection_factor)
                     if self.custom_max_points and points > self.custom_max_points:
                         points = self.custom_max_points
                         if not points:
@@ -71,7 +91,9 @@ class CustomLoyaltyProgram(LoyaltyProgram):
                     
 
                     # try:  
-                    creation_date = self.creation.date()
+                    creation_datetime = frappe.db.get_value(doc.doctype, {"name": doc.name}, "creation")
+
+                    creation_date = creation_datetime.date()
                     
                     doc = frappe.get_doc(
                         {
@@ -87,7 +109,8 @@ class CustomLoyaltyProgram(LoyaltyProgram):
                             "expiry_date": add_days(creation_date, lp_details.expiry_duration),
                             "posting_date": creation_date,
                         }
-                    ).insert()              
+                    ).insert()     
+                    # frappe.msgprint(f"created:{doc.name}")         
                     
                 # except Exception as e:
                 #     self.log_error("Loyalty points failed")
@@ -222,15 +245,17 @@ customer, loyalty_program, expiry_date=None, company=None, include_expired_entry
 #it applies changes into points based on the rules defined
 def process_loyalty_points(doc, state):
     # frappe.msgprint("overiden by loyalty management")
-    if (
-        frappe.flags.in_patch
-        or frappe.flags.in_install
-        or frappe.flags.in_migrate
-        or frappe.flags.in_import
-        or frappe.flags.in_setup_wizard
-        or doc.doctype in log_types
-    ):
-        return
+    # frappe.msgprint("rty")
+    # if (
+    #     frappe.flags.in_patch
+    #     or frappe.flags.in_install
+    #     or frappe.flags.in_migrate
+    #     or frappe.flags.in_import
+    #     or frappe.flags.in_setup_wizard
+    #     or doc.doctype in log_types
+    # ):
+       
+    #     return
 
     # if not is_energy_point_enabled():
     # 	return
@@ -248,8 +273,15 @@ def process_loyalty_points(doc, state):
     #     # program = frappe.get_doc("Loyalty Program", d.get("name"))
     #     frappe.msgprint(f"Program: ")
     programs = frappe.cache_manager.get_doctype_map(
-    "Loyalty Program", doc.doctype, dict(company="Hala Tech")
+    "Loyalty Program", doc.doctype, dict(company="Yemen Frappe")
     )
+#     programs_ = frappe.get_all(
+#     "Loyalty Program", 
+    
+#     fields=["*"]
+# )
+
+    # frappe.msgprint(f"programs {programs}")
     
     
 

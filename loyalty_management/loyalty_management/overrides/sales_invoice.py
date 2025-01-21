@@ -10,26 +10,28 @@ from loyalty_management.loyalty_management.overrides.loyalty_program import (
 
 class CustomSalesInvoice(SalesInvoice):
 
-    @frappe.whitelist()
-    def get_returned_qty(self):
-        from frappe.query_builder.functions import Sum
+    # @frappe.whitelist()
+    # def get_returned_qty(self):
+    #     from frappe.query_builder.functions import Sum
 
-        doc = frappe.qb.DocType(self.doctype)
-        returned_qty = (
-            frappe.qb.from_(doc)
-            .select(Sum(doc.total_qty))
-            .where((doc.docstatus == 1) & (doc.is_return == 1) & (doc.return_against == self.name))
-        ).run()
+    #     doc = frappe.qb.DocType(self.doctype)
+    #     returned_qty = (
+    #         frappe.qb.from_(doc)
+    #         .select(Sum(doc.total_qty))
+    #         .where((doc.docstatus == 1) & (doc.is_return == 1) & (doc.return_against == self.name))
+    #     ).run()
 
-        return abs(returned_qty[0][0]) if returned_qty[0][0] else 0
+    #     return abs(returned_qty[0][0]) if returned_qty[0][0] else 0
 
 
 
     # collection of the loyalty points, create the ledger entry for that.
     def make_loyalty_point_entry(self):
+        # frappe.msgprint("iiii")
         pass
 
     def delete_loyalty_point_entry(self):
+        # frappe.msgprint("iiii")
         pass
 
     
