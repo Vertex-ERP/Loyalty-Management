@@ -31,6 +31,7 @@ app_license = "mit"
 doctype_js = {
     
     "Loyalty Program": "public/js/loyalty_program.js",
+    "Item": "public/js/item.js",
     # "Customer": "public/js/customer_dashboard.js",
 
     

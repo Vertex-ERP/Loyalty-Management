@@ -14,16 +14,43 @@ from math import floor
 
 
 class CustomLoyaltyProgram(LoyaltyProgram): 
+    
+    def eval_condition(self, doc):
+        return self.custom_condition and frappe.safe_eval(self.custom_condition, None, {"doc": doc.as_dict()})
+
     def on_update(self):
         frappe.cache_manager.clear_doctype_map("Loyalty Program", self.custom_reference_doctype)
 
     def on_trash(self):
         frappe.cache_manager.clear_doctype_map("Loyalty Program", self.custom_reference_doctype)
 
+    @frappe.whitelist()
+    def get_item_loyalty_points(self, tier_name):
+        loyalty_points = frappe.db.sql(
+        """
+        SELECT
+            i.item_name AS parent_item,
+            ilp.name,
+            ilp.tier_name,
+            ilp.loyalty_program,
+            ilp.collection_factor
+        FROM `tabItem Loyalty Point` ilp
+        LEFT JOIN `tabItem` i ON ilp.parent = i.name
+        WHERE ilp.tier_name = %(tier_name)s AND ilp.loyalty_program = %(loyalty_program)s
+        """,
+        values={"tier_name": tier_name, "loyalty_program": self.name},
+        as_dict=True
+    )
+
+        # frappe.msgprint(f"Result with alias: {loyalty_points}")
+        return loyalty_points
+
     
 
     def rule_condition_satisfied(self, doc):
         if self.custom_for_doc_event == "New":
+            if self.custom_condition and not self.eval_condition(doc):
+                return False
             # indicates that this was a new doc
             return doc.get_doc_before_save() is None
         if self.custom_for_doc_event == "Submit":
@@ -31,7 +58,7 @@ class CustomLoyaltyProgram(LoyaltyProgram):
         if self.custom_for_doc_event == "Cancel":
             return doc.docstatus.is_cancelled()
         if self.custom_for_doc_event == "Value Change":
-            field_to_check = self.field_to_check
+            field_to_check = self.custom_field_to_check
             if not field_to_check:
                 return False
             doc_before_save = doc.get_doc_before_save()
@@ -47,6 +74,18 @@ class CustomLoyaltyProgram(LoyaltyProgram):
             return self.eval_condition(doc)
         return False
 
+    def get_item_collection_factor(self,item_code, tier_name):
+        item_doc = frappe.get_doc("Item", item_code)
+
+        # Ensure the child table exists
+        if not hasattr(item_doc, "custom_loyalty_points"):
+            frappe.throw(_("The Item Doctype does not have a custom_loyalty_points child table."))
+
+        # Search for the matching tier in the child table
+        for loyalty_point in item_doc.custom_loyalty_points:
+            if loyalty_point.loyalty_program==self.name and  loyalty_point.tier_name == tier_name:
+                return loyalty_point.collection_factor
+            
 
     
 
@@ -55,19 +94,19 @@ class CustomLoyaltyProgram(LoyaltyProgram):
         #field is user_field in loyal program
         #if doc.[field] is equal name of program
 
-        current_time = now().split(" ")[1][:5]  # Extract "HH:MM"
+        # current_time = now().split(" ")[1][:5]  # Extract "HH:MM"
         # current_time.split
         exists = frappe.db.exists(
         "Loyalty Point Entry",
         {
         "invoice": doc.name,
-        "loyalty_points":   [">=", -1],
+        "loyalty_points":   [">", -1],
 
 
         
         },
         )
-        # frappe.msgprint(f"exist{exists}{current_time}")
+        # frappe.msgprint(f"exist{exists}")
         if exists:
              return
         
@@ -81,8 +120,42 @@ class CustomLoyaltyProgram(LoyaltyProgram):
                 lp_details=get_loyalty_program_details_with_points( customer=  doc.get(self.custom_user_field), loyalty_program=self.name,expiry_date=doc.creation,company=self.company,include_expired_entry=True )
                 # frappe.msgprint(f"{lp_details.collection_factor}")
                 if doc.get(self.custom_based_on):
-                    # frappe.msgprint("iii")
-                    points=floor(doc.get(self.custom_based_on) /lp_details.collection_factor)
+                    
+                    if not self.custom_based_on_item:
+                                           
+                        points=floor(doc.get(self.custom_based_on) /lp_details.collection_factor)
+                    else:# in case it is based on item
+                        #get the items child table and get distinct items with how many times the exist
+                        #get thier lotlaty point details and compare
+                        # calculate returned points
+                        # frappe.msgprint("here")
+                        points = 0
+                        items = doc.get("items")
+                        has_qty_field = hasattr(items[0], "qty") if items else False
+                        item_counts = {}
+                        if has_qty_field:
+                            # frappe.msgprint("has_qty_field true")
+                            for item in items:#calculate qty(should be chosen form desk)
+                                increment_value = item.get("qty") 
+                                
+                            
+                                item_code = item.get("item_code") 
+                                if item_code in item_counts:
+                                    item_counts[item_code] += increment_value
+                                else:
+                                    item_counts[item_code] = increment_value
+                            # Loop through distinct items and calculate points for each
+                            for item_code, count in item_counts.items():
+                                # Fetch loyalty point details for the item
+                                # lp_details = frappe.get_value("Loyalty Point Details", {"item_code": item_code}, ["collection_factor"])#???
+
+                                if lp_details:
+                                    # Calculate points for this item based on its count and collection factor
+                                    #get collection factor from item
+                                    collection_factor=self.get_item_collection_factor(item_code, lp_details["tier_name"])
+                                    if collection_factor:
+                                     points += floor(count / collection_factor)
+                        # frappe.msgprint(f"item_counts{item_counts}")
                     if self.custom_max_points and points > self.custom_max_points:
                         points = self.custom_max_points
                         if not points:
@@ -225,12 +298,9 @@ customer, loyalty_program, expiry_date=None, company=None, include_expired_entry
     )
     # frappe.msgprint(f"loyalty_entries {loyalty_entries}")
 
-    # Summing the fields programmatically
     total_loyalty_points = sum(entry.get("loyalty_points", 0) for entry in loyalty_entries)
     total= sum(entry.get("custom_based_on_value", 0) for entry in loyalty_entries)
-    # frappe.msgprint(f"total_loyalty_points {total_loyalty_points}")
-    # total_spent = sum(entry.get("purchase_amount", 0) for entry in loyalty_entries)
-    # total_qty_spent = sum(entry.get("custom_purchase_qty", 0) for entry in loyalty_entries)
+   
 
     return {
         "loyalty_points": total_loyalty_points,
@@ -273,7 +343,7 @@ def process_loyalty_points(doc, state):
     #     # program = frappe.get_doc("Loyalty Program", d.get("name"))
     #     frappe.msgprint(f"Program: ")
     programs = frappe.cache_manager.get_doctype_map(
-    "Loyalty Program", doc.doctype, dict(company="Yemen Frappe")
+    "Loyalty Program", doc.doctype
     )
 #     programs_ = frappe.get_all(
 #     "Loyalty Program", 
@@ -287,7 +357,7 @@ def process_loyalty_points(doc, state):
 
     if programs:
         # frappe.msgprint(f"No programs found for Doctype: {doc.doctype}")
-        for d in programs:
+        for d in programs:  
             # frappe.msgprint(f"Program Found: {d.get('name')}")
 
 
@@ -322,6 +392,17 @@ def is_eligible_user(user):
     """Checks if user is eligible to get energy points"""
     enabled_users = get_enabled_users()
     return user and user in enabled_users and user != "Administrator"
+
+
+@frappe.whitelist()
+def get_item_loyalty_points(loyalty_program):
+     # Query the child table directly
+        loyalty_points = frappe.get_all(
+            "Item Loyalty Point",
+            filters={"loyalty_program": loyalty_program},
+            fields=["name", "parent", "tier_name", "collection_factor"]  # Specify the fields you need
+        )
+        return loyalty_points
 
 
 
