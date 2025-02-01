@@ -112,77 +112,89 @@ class CustomLoyaltyProgram(LoyaltyProgram):
         
         customer_program=frappe.db.get_value("Customer", doc.get(self.custom_user_field), "loyalty_program")
         if customer_program==self.name and self.custom_reference_doctype == doc.get("doctype"):
-            # frappe.msgprint(f"true {self.name}")
+            # frappe.msgprint(f"true {self.name},{self.custom_based_on}")
 
 
             if self.rule_condition_satisfied(doc):
            
                 lp_details=get_loyalty_program_details_with_points( customer=  doc.get(self.custom_user_field), loyalty_program=self.name,expiry_date=doc.creation,company=self.company,include_expired_entry=True )
                 # frappe.msgprint(f"{lp_details.collection_factor}")
-                if doc.get(self.custom_based_on):
+                # if doc.get(self.custom_based_on):#??
+                #     frappe.msgprint("here1")
                     
-                    if not self.custom_based_on_item:
-                                           
+                if not self.custom_based_on_item:#up 1 level
+                    # frappe.msgprint("here0")
+                    if doc.get(self.custom_based_on):
+                                        
                         points=floor(doc.get(self.custom_based_on) /lp_details.collection_factor)
-                    else:# in case it is based on item
-                        #get the items child table and get distinct items with how many times the exist
-                        #get thier lotlaty point details and compare
-                        # calculate returned points
-                        # frappe.msgprint("here")
-                        points = 0
-                        items = doc.get("items")
-                        has_qty_field = hasattr(items[0], "qty") if items else False
-                        item_counts = {}
-                        if has_qty_field:
-                            # frappe.msgprint("has_qty_field true")
-                            for item in items:#calculate qty(should be chosen form desk)
-                                increment_value = item.get("qty") 
-                                
+                        based_on_value=doc.get(self.custom_based_on)
+                        # frappe.msgprint(f"points{points}")
+                else:# in case it is based on item
+                    #get the items child table and get distinct items with how many times the exist
+                    #get thier lotlaty point details and compare
+                    # calculate returned points
+                    # frappe.msgprint("here")
+                        
+                    points = 0
+                    based_on_value=0
+                    # frappe.msgprint(f"{self.custom_table_based_on}")
+                    items = doc.get(self.custom_table_based_on)
+                    has_field = hasattr(items[0], self.custom_based_on) if items else False
+                    # frappe.msgprint(f"has_qty_field {has_field,{items}}")
+                    item_counts = {}
+                    if has_field:
+                        # frappe.msgprint("has_qty_field true")
+                        for item in items:#calculate qty(should be chosen form desk)
+                            increment_value = item.get(self.custom_based_on) 
                             
-                                item_code = item.get("item_code") 
-                                if item_code in item_counts:
-                                    item_counts[item_code] += increment_value
-                                else:
-                                    item_counts[item_code] = increment_value
-                            # Loop through distinct items and calculate points for each
-                            for item_code, count in item_counts.items():
-                                # Fetch loyalty point details for the item
-                                # lp_details = frappe.get_value("Loyalty Point Details", {"item_code": item_code}, ["collection_factor"])#???
+                        
+                            item_code = item.get("item_code") 
+                            if item_code in item_counts:
+                                item_counts[item_code] += increment_value
+                            else:
+                                item_counts[item_code] = increment_value
+                        # Loop through distinct items and calculate points for each
+                        for item_code, count in item_counts.items():
+                            # Fetch loyalty point details for the item
+                            # lp_details = frappe.get_value("Loyalty Point Details", {"item_code": item_code}, ["collection_factor"])#???
 
-                                if lp_details:
-                                    # Calculate points for this item based on its count and collection factor
-                                    #get collection factor from item
-                                    collection_factor=self.get_item_collection_factor(item_code, lp_details["tier_name"])
-                                    if collection_factor:
-                                     points += floor(count / collection_factor)
-                        # frappe.msgprint(f"item_counts{item_counts}")
-                    if self.custom_max_points and points > self.custom_max_points:
-                        points = self.custom_max_points
-                        if not points:
-                            return
-                    # frappe.msgprint(f"points{points}")
-                    
+                            if lp_details:
+                                # Calculate points for this item based on its count and collection factor
+                                #get collection factor from item
+                                collection_factor=self.get_item_collection_factor(item_code, lp_details["tier_name"])
+                                if collection_factor:
+                                    points += floor(count / collection_factor)
+                                    based_on_value+=count
+                    # frappe.msgprint(f"item_counts{item_counts}")
+                    else:
+                        return
+                if self.custom_max_points and points > self.custom_max_points:
+                    points = self.custom_max_points
+                    if not points:
+                        return
+                # frappe.msgprint(f"points{points}")
+                
 
-                    # try:  
-                    creation_datetime = frappe.db.get_value(doc.doctype, {"name": doc.name}, "creation")
+                # try:  
+                creation_datetime = frappe.db.get_value(doc.doctype, {"name": doc.name}, "creation")
 
-                    creation_date = creation_datetime.date()
-                    
-                    doc = frappe.get_doc(
-                        {
-                            "doctype": "Loyalty Point Entry",
-                            "company": lp_details.company,
-                            "loyalty_program": lp_details.loyalty_program,
-                            "loyalty_program_tier": lp_details.tier_name,
-                            "customer": doc.get(self.custom_user_field),
-                            "invoice_type": doc.doctype,
-                            "invoice": doc.name,
-                            "loyalty_points": points,
-                            "custom_based_on_value": doc.get(self.custom_based_on),
-                            "expiry_date": add_days(creation_date, lp_details.expiry_duration),
-                            "posting_date": creation_date,
-                        }
-                    ).insert()     
+                creation_date = creation_datetime.date()
+                
+                doc = frappe.get_doc(
+                    {
+                        "doctype": "Loyalty Point Entry",
+                        "company": lp_details.company,
+                        "loyalty_program": lp_details.loyalty_program,
+                        "loyalty_program_tier": lp_details.tier_name,
+                        "customer": doc.get(self.custom_user_field),
+                        "invoice_type": doc.doctype,
+                        "invoice": doc.name,
+                        "loyalty_points": points,
+                        "custom_based_on_value": based_on_value,
+                        "expiry_date": add_days(creation_date, lp_details.expiry_duration),
+                        "posting_date": creation_date,
+                    }
+                ).insert()     
                     # frappe.msgprint(f"created:{doc.name}")         
                     
                 # except Exception as e:

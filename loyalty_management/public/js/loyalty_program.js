@@ -1,6 +1,8 @@
 frappe.ui.form.on('Loyalty Program', {
     refresh: function(frm) {
         hide_standard_fields(frm);
+		// if(frm.doc.custom_based_on_item){
+		// 	frm.events.set_item_table(frm);}
         frm.events.set_field_options(frm);
 		frm.events.set_items_based_prop(frm);
 		toggleColumns(frm,["collection_factor"],"collection_rules")
@@ -15,22 +17,45 @@ frappe.ui.form.on('Loyalty Program', {
 	// 		frm.set_value("custom_for_assigned_users", !frm.doc.custom_for_doc_event === "New");
 	// 	}
 	// },
+	
+	custom_based_on_item(frm) {
+	  
+		
+		frm.events.set_field_options(frm);
+		toggleColumns(frm,["collection_factor"],"collection_rules")
+	   
+		
+	},
+	custom_table_based_on(frm){
+		frm.events.set_field_options(frm);
+	//     const map_for_options = (df) => ({ label: df.label, value: df.fieldname });
+	//     // frappe.msgprint("here")
+	//       const table_fields = frappe.meta
+	// 			.get_docfields(frm.doc.custom_table_based_on)
+	// 			.filter(frappe.model.is_value_type);
+	// 			multiplier_fields = table_fields
+	// 			.filter((df) => ["Int", "Float"].includes(df.fieldtype))
+	// 			.map(map_for_options);
+	// frm.set_df_property("custom_based_on", "options", multiplier_fields);
+	},
+	
 
     custom_reference_doctype(frm) {
-		
+		// if(frm.doc.custom_based_on_item){
+		// frm.events.set_item_table(frm);}
         frm.events.set_field_options(frm);
 		frm.events.set_items_based_prop(frm);
 
 		
 	},
 	
-	custom_based_on_item(frm){
-	    toggleColumns(frm,["collection_factor"],"collection_rules")
+	// custom_based_on_item(frm){
 	   
 	   
-	},
+	// },
 
 	set_field_options(frm) {
+		// frappe.msgprint("set_field_options")
 		// sets options for field_to_check, user_field and multiplier fields
 		// based on reference doctype
 		const reference_doctype = frm.doc.custom_reference_doctype;
@@ -50,19 +75,64 @@ frappe.ui.form.on('Loyalty Program', {
 						(df.fieldtype === "Link" && df.options === "Customer")
 				)
 				.map(map_for_options);
+
+			multiplier_fields=[]
+			if(!frm.doc.custom_based_on_item){
+				// frappe.msgprint("not")
+			multiplier_fields = fields
+				.filter((df) => ["Int", "Float","Currency"].includes(df.fieldtype))
+				.map(map_for_options);
+			}
+			else{
+				frm.events.set_item_table(frm);
+
+
+								// Get the selected fieldname from the dropdown
+				let selected_fieldname = frm.doc.custom_table_based_on; // This now stores the actual fieldname
+
+				// Find the matching child table DocType based on fieldname
+				frappe.model.with_doctype(frm.doc.custom_reference_doctype, () => {
+					let childTableMeta = frappe.get_meta(frm.doc.custom_reference_doctype).fields
+						.find(df => df.fieldtype === "Table" && df.fieldname === selected_fieldname); // Match by fieldname
+
+					console.log("Selected Child Table Meta:", childTableMeta);
+
+					if (childTableMeta) {
+						let child_table_doctype = childTableMeta.options; // Get actual DocType name
+						console.log("Actual Child Table DocType:", child_table_doctype);
+
+						// Now fetch the fields from the correct DocType
+						const table_fields = frappe.meta
+							.get_docfields(child_table_doctype)
+							.filter(frappe.model.is_value_type);
+
+						// Filter numeric fields & format as {label, value}
+						multiplier_fields = table_fields
+							.filter(df => ["Int", "Float", "Currency"].includes(df.fieldtype))
+							.map(map_for_options);
+
+						console.log("Multiplier Fields:", multiplier_fields);
+
+						// // ✅ Set the dropdown options for the target field (e.g., `custom_multiplier_field`)
+						// frm.set_df_property("custom_multiplier_field", "options", multiplier_fields);
+					} else {
+						console.warn("No matching child table found for fieldname:", selected_fieldname);
+					}
+				});
+
+
+							// frm.set_df_property("custom_based_on", "options", multiplier_fields);
 				
 
-			const multiplier_fields = fields
-				.filter((df) => ["Int", "Float"].includes(df.fieldtype))
-				.map(map_for_options);
-               
+			}
 
-			// blank option for the ability to unset the multiplier field
-			// multiplier_fields.unshift(null);
 
 			frm.set_df_property("custom_field_to_check", "options", fields_to_check);
 			frm.set_df_property("custom_user_field", "options", user_fields);
 			frm.set_df_property("custom_based_on", "options", multiplier_fields);
+			// console.log("selected items"+multiplier_fields)
+			// frm.set_df_property("custom_child_table_with_item", "options", childTablesWithItemLink); // Add child tables
+
 		});
 	},
 
@@ -87,17 +157,48 @@ frappe.ui.form.on('Loyalty Program', {
 	},
 	set_item_details_prop(frm) {
 		if (frm.doc.custom_based_on_item) {
-			frappe.msgprint("here")
+			// frappe.msgprint("here")
 			frm.set_df_property("custom_item_point_details", "hidden", false);
 			frm.set_df_property("custom_add_item", "hidden", false);
 			// frm.set_df_property("collection_factor", "hidden", true);
 			
 		}
 		else{
-			frappe.msgprint("here2")
+			// frappe.msgprint("here2")
 			// frm.set_df_property("custom_item_details", "hidden", true);
 			// frm.set_df_property("collection_factor", "hidden", false);
 		}
+	},
+	set_item_table(frm) {
+		frappe.model.with_doctype(frm.doc.custom_reference_doctype, () => {
+			let childTableOptions = []; // Store field labels & values
+			
+			// Fetch all child table fields from the reference Doctype
+			frappe.get_meta(frm.doc.custom_reference_doctype).fields
+				.filter(df => df.fieldtype === "Table") // Ensure it's a child table
+				.forEach(df => {
+					let childTable = df.options; // Get child table DocType name
+					let fieldLabel = df.label;   // Get field title (label)
+					let fieldname = df.fieldname; // Get actual fieldname
+	
+					// Get fields of the child table Doctype
+					let childFields = frappe.meta.get_docfields(childTable);
+	
+					// Check if any field is a "Link" type and linked to "Item"
+					let hasItemLink = childFields.some(field => field.fieldtype === "Link" && field.options === "Item");
+	
+					if (hasItemLink) {
+						// Store both label and fieldname so we can retrieve the fieldname later
+						childTableOptions.push({ label: fieldLabel, value: fieldname });
+					}
+				});
+	
+			// Set the dropdown options using both field labels and values
+			frm.set_df_property("custom_table_based_on", "options", childTableOptions.map(opt => opt));
+	
+			// Debugging log (optional)
+			console.log("Child Tables with Link to Item (Field Titles & Fieldnames):", childTableOptions);
+		});
 	}
 	
 	
